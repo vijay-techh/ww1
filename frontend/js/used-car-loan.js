@@ -883,7 +883,10 @@ function initBtEmiCalculator() {
 // Fetch dealers (users with role 'dealer') and populate the dealer select
 async function loadDealerOptions() {
   const dealerSelect = document.getElementById('basicCaseDealerSelect');
-  if (!dealerSelect) return;
+  if (!dealerSelect) {
+    console.error('Dealer select element not found');
+    return;
+  }
 
   // Always clear hardcoded options immediately (DSA list in HTML)
   dealerSelect.innerHTML = '';
@@ -892,15 +895,34 @@ async function loadDealerOptions() {
   loadingOpt.textContent = 'Loading dealers...';
   dealerSelect.appendChild(loadingOpt);
 
-  let currentUser = null;
-  try { currentUser = JSON.parse(localStorage.getItem('user') || 'null'); } catch (e) { currentUser = null; }
+  // Use the existing function to get user
+  const currentUser = getUserFromStorage();
+  
+  console.log('Loading dealers for user:', currentUser);
 
   try {
     const headers = {};
-    if (currentUser && currentUser.id) headers['x-user-id'] = currentUser.id;
+    if (currentUser && currentUser.id) {
+      headers['x-user-id'] = String(currentUser.id);
+      console.log('User ID for header:', currentUser.id);
+    } else {
+      console.error('No user ID available - user not logged in');
+      dealerSelect.innerHTML = '';
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'Please login to see dealers';
+      dealerSelect.appendChild(opt);
+      return;
+    }
+    
+    console.log('Fetching dealers with headers:', headers);
 
     const res = await fetch('/api/users/dealers', { headers });
+    console.log('Dealer API response status:', res.status);
+    
     if (!res.ok) {
+      const errorText = await res.text();
+      console.error('Dealer API error:', res.status, errorText);
       dealerSelect.innerHTML = '';
       const opt = document.createElement('option');
       opt.value = '';
@@ -910,7 +932,19 @@ async function loadDealerOptions() {
     }
 
     const dealers = await res.json();
+    console.log('Dealers received:', dealers);
+    
     const list = Array.isArray(dealers) ? dealers : [];
+    
+    if (list.length === 0) {
+      console.warn('No dealers in database');
+      dealerSelect.innerHTML = '';
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'No dealers available';
+      dealerSelect.appendChild(opt);
+      return;
+    }
 
     dealerSelect.innerHTML = '';
     const placeholder = document.createElement('option');
@@ -920,10 +954,12 @@ async function loadDealerOptions() {
 
     list.forEach(d => {
       const opt = document.createElement('option');
-      opt.textContent = d.display_name || d.username || 'Dealer';
+      opt.textContent = d.display_name || d.dealer_name || d.username || 'Dealer';
       opt.value = d.id;
       dealerSelect.appendChild(opt);
     });
+    
+    console.log('Dealer options populated:', list.length, 'dealers');
 
     const othersOpt = document.createElement('option');
     othersOpt.value = 'Others';

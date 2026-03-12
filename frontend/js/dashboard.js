@@ -19,11 +19,13 @@ const adminMenu = document.getElementById("adminUsersMenu");
 const assignMenu = document.getElementById("assignEmployeesMenu");
 const dealerKhataMenu = document.getElementById("dealerKhataMenu");
 const myKhataMenu = document.getElementById("myKhataMenu");
+const profileMenu = document.getElementById("profileMenu");
 
 if (user.role === "admin") {
   if (adminMenu) adminMenu.style.display = "block";
   if (assignMenu) assignMenu.style.display = "block";
   if (dealerKhataMenu) dealerKhataMenu.style.display = "block";
+  if (profileMenu) profileMenu.style.display = "none";
   
   // Show notification bell for admins
   const notificationBell = document.getElementById("notificationBell");
@@ -346,7 +348,7 @@ loadBusinessType();
 initNotificationSystem();
 
 // Welcome Popup functionality
-function showWelcomePopup() {
+async function showWelcomePopup() {
   // Check if user is manager, employee, or dealer
   if (user && (user.role === 'manager' || user.role === 'employee' || user.role === 'dealer')) {
     // Check if this is the first visit (no welcome shown flag)
@@ -357,8 +359,25 @@ function showWelcomePopup() {
       const welcomeMessage = document.getElementById('welcomeMessage');
       
       if (popup && welcomeMessage) {
-        // Set welcome message with username
-        welcomeMessage.textContent = `Welcome ${user.username}!`;
+        // Fetch profile data to get user's name
+        let displayName = user.username; // fallback to username
+        try {
+          const response = await fetch(`/api/user/${user.role}-info/${user.id}`);
+          if (response.ok) {
+            const profileData = await response.json();
+            // Use first_name + last_name if available
+            if (profileData.first_name || profileData.last_name) {
+              displayName = `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim();
+            } else if (profileData.dealer_name) {
+              displayName = profileData.dealer_name;
+            }
+          }
+        } catch (err) {
+          console.log('Could not fetch profile for welcome message:', err);
+        }
+        
+        // Set welcome message with name from profile
+        welcomeMessage.textContent = `Welcome ${displayName}!`;
         
         // Show popup
         popup.style.display = 'flex';
@@ -404,18 +423,6 @@ async function loadBestEmployee() {
     if (!nameEl || !amountEl || !casesEl || !cardEl) return;
     if (!user || !user.role || !user.id) return;
 
-    // Dealer doesn't have "best employee" concept (they are not an employee)
-    if (user.role === 'dealer') {
-      cardEl.innerHTML = `
-        <div style="text-align: center; width: 100%;">
-          <div class="avatar-placeholder">🏆</div>
-          <h5>No Performance Data</h5>
-          <p class="employee-role">Not available for dealer role</p>
-        </div>
-      `;
-      return;
-    }
-
     const url = `/api/dashboard/${encodeURIComponent(user.role)}/${encodeURIComponent(user.id)}/best-employee`;
     const res = await fetch(url);
     if (!res.ok) {
@@ -435,8 +442,28 @@ async function loadBestEmployee() {
       return;
     }
 
-    // Real employee data
-    nameEl.textContent = data.name;
+    // Fetch profile data to get actual name instead of username
+    let displayName = data.name; // fallback to username from API
+    
+    try {
+      // The best employee ID is in employee_id field
+      const bestEmployeeId = data.employee_id;
+      
+      if (bestEmployeeId) {
+        const profileRes = await fetch(`/api/user/employee-info/${bestEmployeeId}`);
+        if (profileRes.ok) {
+          const profileData = await profileRes.json();
+          if (profileData.first_name || profileData.last_name) {
+            displayName = `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim();
+          }
+        }
+      }
+    } catch (profileErr) {
+      console.log('Could not fetch profile for best employee name:', profileErr);
+    }
+
+    // Real employee data with profile name
+    nameEl.textContent = displayName;
     amountEl.textContent = Number(data.disbursed_amount || 0).toLocaleString("en-IN");
     casesEl.textContent = data.total_cases || 0;
   } catch (err) {

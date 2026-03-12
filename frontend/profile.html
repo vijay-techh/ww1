@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>WheelsWeb | Profile</title>
+  <link rel="stylesheet" href="/css/dashboard.css?v=3" />
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo" id="logo">WheelsWeb</div>
+
+<nav class="sidebar-nav">
+  <a href="/dashboard.html">Overview</a>
+  <a href="/new-lead.html">Start New Application</a>
+  <a href="/view-cases.html">View All Cases</a>
+  <!-- Only for employee -->
+  <a href="#" onclick="openDealerLeads()" id="dealerLeadBtn">View Dealer Leads</a>
+
+  <!-- ADMIN ONLY - KHATA -->
+  <a href="/dealer-khata.html" id="dealerKhataMenu" style="display:none">
+     Khata
+  </a>
+  
+  <!-- ADMIN ONLY -->
+  <a href="/admin-users.html" id="adminUsersMenu" style="display:none">
+    User Management
+  </a>
+  
+  <!-- ADMIN ONLY -->
+  <a href="/assign-employees.html" id="assignEmployeesMenu" style="display:none">
+    Assign Employees
+  </a>
+  
+  
+  <!-- DEALER ONLY - MY KHATA -->
+  <a href="/my-khata.html" id="myKhataMenu" style="display:none">
+    My Khata
+  </a>
+  
+  <!-- Profile -->
+  <a href="/profile.html" class="active" id="profileMenu">Profile</a>
+</nav>
+
+
+    <div class="logout" onclick="logout()">Logout</div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main">
+    <!-- Profile Section -->
+    <section class="profile-section">
+      <div class="profile-header">
+        <h2>My Profile</h2>
+      </div>
+      
+      <div class="profile-card">
+        <div class="profile-avatar">
+          <div class="avatar-placeholder">👤</div>
+        </div>
+        
+        <div class="profile-info">
+          <!-- Personal Details Section -->
+          <div class="info-group">
+            <h3>Personal Details</h3>
+            <div id="profilePersonalInfo">
+              <div class="info-item">
+                <label>Name:</label>
+                <span id="profileName">-</span>
+              </div>
+              <div class="info-item" id="profileEmployeeIdRow" style="display: none;">
+                <label>Employee ID:</label>
+                <span id="profileEmployeeId">-</span>
+              </div>
+              <div class="info-item" id="profileDealerCodeRow" style="display: none;">
+                <label>Dealer Code:</label>
+                <span id="profileDealerCode">-</span>
+              </div>
+              <div class="info-item">
+                <label>DOB:</label>
+                <span id="profileDob">-</span>
+              </div>
+              <div class="info-item">
+                <label>Joining Date:</label>
+                <span id="profileJoiningDate">-</span>
+              </div>
+              <div class="info-item">
+                <label>PAN:</label>
+                <span id="profilePan">-</span>
+              </div>
+              <div class="info-item">
+                <label>Aadhar:</label>
+                <span id="profileAadhar">-</span>
+              </div>
+              <div class="info-item">
+                <label>Mobile:</label>
+                <span id="profileMobile">-</span>
+              </div>
+              <div class="info-item">
+                <label>Father's Mobile:</label>
+                <span id="profileFatherMobile">-</span>
+              </div>
+              <div class="info-item">
+                <label>Mother's Mobile:</label>
+                <span id="profileMotherMobile">-</span>
+              </div>
+              <div class="info-item">
+                <label>Personal Email:</label>
+                <span id="profilePersonalEmail">-</span>
+              </div>
+              <div class="info-item">
+                <label>Office Email:</label>
+                <span id="profileOfficeEmail">-</span>
+              </div>
+              <div class="info-item">
+                <label>Location:</label>
+                <span id="profileLocation">-</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Bank Details Section -->
+          <div class="info-group">
+            <h3>Bank Details</h3>
+            <div id="profileBankInfo">
+              <div class="info-item">
+                <label>Bank Name:</label>
+                <span id="profileBankName">-</span>
+              </div>
+              <div class="info-item">
+                <label>Account Number:</label>
+                <span id="profileAccountNo">-</span>
+              </div>
+              <div class="info-item">
+                <label>IFSC:</label>
+                <span id="profileIfsc">-</span>
+              </div>
+              <div class="info-item">
+                <label>Branch:</label>
+                <span id="profileBankBranch">-</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/js/profile.js"></script>
+</body>
+</html>

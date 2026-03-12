@@ -39,6 +39,9 @@
   <a href="/my-khata.html" id="myKhataMenu" style="display:none">
     My Khata
   </a>
+  
+  <!-- Profile -->
+  <a href="/profile.html" id="profileMenu">Profile</a>
 </nav>
 
 
@@ -124,9 +127,61 @@
             </div>
           </div>
         </div>
-        <div class="performance-badge">
-          <div class="badge-icon">⭐</div>
-          <span>Top Performer</span>
+      </div>
+    </section>
+    
+    <!-- Profile Section (Hidden by default) -->
+    <section id="profileSection" class="profile-section" style="display: none;">
+      <div class="profile-header">
+        <h2>My Profile</h2>
+        <button class="back-btn" onclick="hideProfile()">← Back to Dashboard</button>
+      </div>
+      
+      <div class="profile-card">
+        <div class="profile-avatar">
+          <div class="avatar-placeholder">👤</div>
+        </div>
+        
+        <div class="profile-info">
+          <div class="info-group">
+            <h3>Personal Information</h3>
+            <div class="info-item">
+              <label>Username:</label>
+              <span id="profileUsername">-</span>
+            </div>
+            <div class="info-item">
+              <label>Role:</label>
+              <span id="profileRole">-</span>
+            </div>
+            <div class="info-item">
+              <label>Display Name:</label>
+              <span id="profileDisplayName">-</span>
+            </div>
+            <div class="info-item">
+              <label>Email:</label>
+              <span id="profileEmail">-</span>
+            </div>
+            <div class="info-item">
+              <label>Phone:</label>
+              <span id="profilePhone">-</span>
+            </div>
+          </div>
+          
+          <div class="info-group">
+            <h3>Account Information</h3>
+            <div class="info-item">
+              <label>User ID:</label>
+              <span id="profileUserId">-</span>
+            </div>
+            <div class="info-item">
+              <label>Created Date:</label>
+              <span id="profileCreatedDate">-</span>
+            </div>
+            <div class="info-item">
+              <label>Status:</label>
+              <span id="profileStatus" class="status-badge">Active</span>
+            </div>
+          </div>
         </div>
       </div>
     </section>
