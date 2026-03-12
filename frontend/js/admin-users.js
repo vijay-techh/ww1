@@ -24,11 +24,15 @@ function renderUsers(filter = "") {
   const tbodyManagers = document.getElementById("managersTableBody");
   const tbodyEmployees = document.getElementById("employeesTableBody");
   const tbodyDealers = document.getElementById("dealersTableBody");
+  const tbodyRTO = document.getElementById("rtoTableBody"); // ⭐ ADD
+
 
   tbodyAdmins.innerHTML = "";
   tbodyManagers.innerHTML = "";
   tbodyEmployees.innerHTML = "";
   tbodyDealers.innerHTML = "";
+  tbodyRTO.innerHTML = "";
+
 
   const term = filter.trim().toLowerCase();
 
@@ -63,7 +67,7 @@ tr.innerHTML = `
 // Add Info button for managers
 const infoCell = tr.querySelector(".info-cell");
 
-if (u.role === "manager" || u.role === "employee" || u.role === "dealer") {
+if (u.role === "manager" || u.role === "employee" || u.role === "dealer" || u.role === "rto_agent") {
   const infoBtn = document.createElement("button");
   infoBtn.className = "info-btn";
   infoBtn.textContent = "ⓘ";
@@ -79,6 +83,10 @@ if (u.role === "manager" || u.role === "employee" || u.role === "dealer") {
   if (u.role === "dealer") {
     infoBtn.addEventListener("click", () => openDealerInfo(u.id));
   }
+  if (u.role === "rto_agent") {
+  infoBtn.addEventListener("click", () => openRtoInfo(u.id));
+}
+
 
 
 
@@ -158,7 +166,9 @@ document.getElementById("closeInfoBtn")?.addEventListener("click", closeManagerI
     if (role === "admin") tbodyAdmins.appendChild(tr);
     else if (role === "manager") tbodyManagers.appendChild(tr);
     else if (role === "dealer") tbodyDealers.appendChild(tr);
+    else if (role === "rto_agent") tbodyRTO.appendChild(tr); // ⭐ ADD
     else tbodyEmployees.appendChild(tr);
+
   });
 }
 
@@ -351,6 +361,34 @@ if (role === "dealer") {
   };
 }
 
+
+let rtoProfile = null;
+
+if (role === "rto_agent") {
+  rtoProfile = {
+    agentId: document.getElementById("rto_agent_id").value,
+    firstName: document.getElementById("rto_first_name").value,
+    lastName: document.getElementById("rto_last_name").value,
+    pan: document.getElementById("rto_pan").value,
+    aadhar: document.getElementById("rto_aadhar").value,
+    dob: document.getElementById("rto_dob").value,
+    joiningDate: document.getElementById("rto_joining").value,
+    mobile: document.getElementById("rto_mobile").value,
+    fatherMobile: document.getElementById("rto_father_mobile").value,
+    motherMobile: document.getElementById("rto_mother_mobile").value,
+    personalEmail: document.getElementById("rto_personal_email").value,
+    officeEmail: document.getElementById("rto_office_email").value,
+    location: document.getElementById("rto_location").value,
+    bank: {
+      accountNo: document.getElementById("rto_account").value,
+      ifsc: document.getElementById("rto_ifsc").value,
+      bankName: document.getElementById("rto_bank").value,
+      bankBranch: document.getElementById("rto_branch").value
+    }
+  };
+}
+
+
   try {
     let res, data;
     
@@ -376,6 +414,14 @@ if (role === "dealer") {
       if (!password) return showToast("Password required for new users");
       
       console.log("CREATING USER:", { username, password, role, profile,  employeeProfile });
+console.log("SENDING DATA:", {
+  username,
+  password,
+  role,
+  profile,
+  employeeProfile,
+  rtoProfile
+});
 
           res = await fetch("/api/admin/users", {
           method: "POST",
@@ -383,14 +429,15 @@ if (role === "dealer") {
             "Content-Type": "application/json",
             "x-admin-id": user.id
           },
-          body: JSON.stringify({
-            username,
-            password,
-            role,
-            profile,   // 👈 THIS was missing
-            employeeProfile   // employee profile
+        body: JSON.stringify({
+          username,
+          password,
+          role,
+          profile,
+          employeeProfile,
+          rtoProfile   // ⭐ ADD THIS LINE
+        })
 
-          })
         });
 
 
@@ -480,27 +527,21 @@ async function toggleStatus(id, status) {
 }
 function toggleRoleSections(role) {
   const managerFields = document.getElementById("managerFields");
-  const employeeSection = document.getElementById("employeeSection");
+  const employeeFields = document.getElementById("employeeSection");
   const dealerFields = document.getElementById("dealerFields");
+  const rtoFields = document.getElementById("rtoFields");
 
-  // hide all first
   if (managerFields) managerFields.style.display = "none";
-  if (employeeSection) employeeSection.style.display = "none";
+  if (employeeFields) employeeFields.style.display = "none";
   if (dealerFields) dealerFields.style.display = "none";
+  if (rtoFields) rtoFields.style.display = "none";
 
-  // show based on role
-  if (role === "manager") {
-    managerFields.style.display = "block";
-  }
-
-  if (role === "employee") {
-    employeeSection.style.display = "block";
-  }
-
-  if (role === "dealer") {
-    dealerFields.style.display = "block";
-  }
+  if (role === "manager" && managerFields) managerFields.style.display = "block";
+  if (role === "employee" && employeeFields) employeeFields.style.display = "block";
+  if (role === "dealer" && dealerFields) dealerFields.style.display = "block";
+  if (role === "rto_agent" && rtoFields) rtoFields.style.display = "block";
 }
+
 
 
 /* ---------------- ROLE FORMAT ---------------- */
@@ -508,6 +549,8 @@ function formatRole(role) {
   if (role === "admin") return "Admin";
   if (role === "manager") return "Manager";
   if (role === "dealer") return "Dealer";
+  if (role === "rto_agent") return "RTO Agent";
+
   return "Employee";
 }
 
@@ -700,5 +743,54 @@ async function openDealerInfo(userId) {
   } catch (err) {
     console.error(err);
     showToast("Failed to load dealer info");
+  }
+}
+
+async function openRtoInfo(userId) {
+  try {
+    const res = await fetch(`/api/admin/rto-info/${userId}`);
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error || "Failed");
+
+    document.getElementById("managerInfoBody").innerHTML = `
+      <div style="line-height:1.9">
+
+        <h3>${data.first_name || "-"} ${data.last_name || ""}</h3>
+        <b>Username:</b> ${data.username || "-"}<br><br>
+
+        <h4>Personal Details</h4>
+        🆔 <b>Agent ID:</b> ${data.agent_id || "-"}<br>
+        📅 <b>DOB:</b> ${data.dob ? new Date(data.dob).toLocaleDateString() : "-"}<br>
+        🗓 <b>Joining Date:</b> ${data.joining_date ? new Date(data.joining_date).toLocaleDateString() : "-"}<br>
+
+        🪪 <b>PAN:</b> ${data.pan_no || "-"}<br>
+        🧾 <b>Aadhar:</b> ${data.aadhar_no || "-"}<br>
+
+        📞 <b>Mobile:</b> ${data.mobile_no || "-"}<br>
+        👨 <b>Father Mobile:</b> ${data.father_mobile_no || "-"}<br>
+        👩 <b>Mother Mobile:</b> ${data.mother_mobile_no || "-"}<br>
+
+        ✉️ <b>Personal Email:</b> ${data.personal_email || "-"}<br>
+        🏢 <b>Office Email:</b> ${data.office_email || "-"}<br>
+
+        📍 <b>Location:</b> ${data.location || "-"}<br>
+
+        <hr>
+
+        <h4>Bank Details</h4>
+        🏦 <b>Bank Name:</b> ${data.bank_name || "-"}<br>
+        💳 <b>Account No:</b> ${data.account_no || "-"}<br>
+        🏷 <b>IFSC:</b> ${data.ifsc || "-"}<br>
+        🌿 <b>Branch:</b> ${data.bank_branch || "-"}
+      </div>
+    `;
+
+    document.getElementById("modalTitle").textContent = "RTO Agent Info";
+    document.getElementById("infoBackdrop").classList.add("show");
+
+  } catch (err) {
+    console.error(err);
+    showToast("Failed to load RTO info");
   }
 }

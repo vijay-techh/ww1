@@ -90,7 +90,29 @@
           <tbody id="dealersTableBody"></tbody>
         </table>
       </section>
+      <h2>RTO Agents</h2>
+
+<div class="table-card">   <!-- ADD THIS WRAPPER -->
+        <table class="users-table" aria-describedby="dealers-list">
+  <thead>
+    <tr>
+      <th>Username</th>
+      <th>Password</th>
+      <th>Role</th>
+      <th>Status</th>
+      <th>Info</th>
+      <th>Last Login</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody id="rtoTableBody"></tbody>
+</table>
+</div>
+
     </div>
+    
+
+
 
     <!-- Create / Edit Modal -->
 
@@ -117,6 +139,7 @@
           <option value="employee">Employee</option>
           <option value="manager">Manager</option>
           <option value="dealer">Dealer</option>
+          <option value="rto_agent">RTO Agent</option>
         </select>
       </div>
 
@@ -378,6 +401,100 @@
   <div class="form-row">
     <label>Bank Branch</label>
     <input id="dealer_branch" />
+  </div>
+
+</div>
+
+<!-- RTO AGENT -->
+<div id="rtoFields" style="display:none; margin-top:10px">
+
+  <h3>RTO Agent Details</h3>
+
+  <div class="form-row">
+    <label>Agent ID</label>
+    <input id="rto_agent_id" />
+  </div>
+
+  <div class="form-row">
+    <label>First Name</label>
+    <input id="rto_first_name" />
+  </div>
+
+  <div class="form-row">
+    <label>Last Name</label>
+    <input id="rto_last_name" />
+  </div>
+
+  <div class="form-row">
+    <label>PAN</label>
+    <input id="rto_pan" />
+  </div>
+
+  <div class="form-row">
+    <label>Aadhar</label>
+    <input id="rto_aadhar" />
+  </div>
+
+  <div class="form-row">
+    <label>DOB</label>
+    <input type="date" id="rto_dob" />
+  </div>
+
+  <div class="form-row">
+    <label>Joining Date</label>
+    <input type="date" id="rto_joining" />
+  </div>
+
+  <div class="form-row">
+    <label>Mobile</label>
+    <input id="rto_mobile" />
+  </div>
+
+  <div class="form-row">
+    <label>Father Mobile</label>
+    <input id="rto_father_mobile" />
+  </div>
+
+  <div class="form-row">
+    <label>Mother Mobile</label>
+    <input id="rto_mother_mobile" />
+  </div>
+
+  <div class="form-row">
+    <label>Personal Email</label>
+    <input id="rto_personal_email" />
+  </div>
+
+  <div class="form-row">
+    <label>Office Email</label>
+    <input id="rto_office_email" />
+  </div>
+
+  <div class="form-row">
+    <label>Location</label>
+    <input id="rto_location" />
+  </div>
+
+  <h4>Bank Details</h4>
+
+  <div class="form-row">
+    <label>Account No</label>
+    <input id="rto_account" />
+  </div>
+
+  <div class="form-row">
+    <label>IFSC</label>
+    <input id="rto_ifsc" />
+  </div>
+
+  <div class="form-row">
+    <label>Bank Name</label>
+    <input id="rto_bank" />
+  </div>
+
+  <div class="form-row">
+    <label>Bank Branch</label>
+    <input id="rto_branch" />
   </div>
 
 </div>
