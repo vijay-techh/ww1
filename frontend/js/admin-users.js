@@ -49,6 +49,11 @@ function renderUsers(filter = "") {
 
     const status = u.status || "active";
     const statusClass = status === "active" ? "status-active" : "status-disabled";
+    
+    // Add disabled-row class if user is inactive
+    if (status === "inactive") {
+      tr.classList.add('disabled-row');
+    }
 
 tr.innerHTML = `
   <td>${u.username}</td>
@@ -519,6 +524,20 @@ async function toggleStatus(id, status) {
 
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
+
+    // Update the row styling based on status
+    const allRows = document.querySelectorAll('.users-table tr');
+    allRows.forEach(row => {
+      // Find the user ID from the actions button click handler
+      const statusBtn = row.querySelector('.action-btn');
+      if (statusBtn && statusBtn.onclick && statusBtn.onclick.toString().includes(id)) {
+        if (status === 'inactive') {
+          row.classList.add('disabled-row');
+        } else {
+          row.classList.remove('disabled-row');
+        }
+      }
+    });
 
     loadUsers();
   } catch (err) {

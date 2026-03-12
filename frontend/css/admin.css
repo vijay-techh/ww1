@@ -98,6 +98,22 @@
 .status-active { background: #ecfdf5; color: #16a34a; }
 .status-disabled { background: #fff7ed; color: #d97706; }
 
+/* Disabled row styling */
+.users-table tr.disabled-row {
+  background-color: #fee2e2;
+  transition: background-color 0.3s ease;
+}
+
+.users-table tr.disabled-row td {
+  color: #991b1b;
+  border-bottom-color: #fecaca;
+}
+
+.users-table tr.disabled-row .status-pill {
+  background: #fca5a5;
+  color: #991b1b;
+}
+
 /* Modal */
 .modal-backdrop {
   position: fixed;
