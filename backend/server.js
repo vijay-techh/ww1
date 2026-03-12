@@ -567,17 +567,73 @@ app.post("/api/leads", async (req, res) => {
   }
 });
 
-app.get("/api/leads/:loanId", async (req, res) => {
+app.get("/api/leads", async (req, res) => {
   try {
-    const { loanId } = req.params;
-    const result = await pool.query("SELECT * FROM leads WHERE loan_id = $1", [loanId]);
-    if (!result.rows.length) return res.status(404).json({ success: false });
-    res.json(result.rows[0]);
+    const { userId, role, viewUser } = req.query;
+
+    console.log("LEADS API HIT:", userId, role);
+
+    let result;
+
+    // 🟢 ADMIN → see everything
+    if (role === "admin") {
+
+      if (viewUser) {
+        result = await pool.query(
+          `SELECT * FROM leads WHERE created_by = $1 ORDER BY loan_id DESC`,
+          [viewUser]
+        );
+      } else {
+        result = await pool.query(
+          `SELECT * FROM leads ORDER BY loan_id DESC`
+        );
+      }
+
+      return res.json(result.rows);
+    }
+
+    // 🟣 EMPLOYEE → own leads
+    if (role === "employee") {
+      result = await pool.query(
+        `SELECT * FROM leads 
+         WHERE created_by = $1 
+         ORDER BY loan_id DESC`,
+        [userId]
+      );
+      return res.json(result.rows);
+    }
+
+    // 🟡 DEALER → own leads
+    if (role === "dealer") {
+      result = await pool.query(
+        `SELECT * FROM leads 
+         WHERE created_by = $1 
+         ORDER BY loan_id DESC`,
+        [userId]
+      );
+      return res.json(result.rows);
+    }
+
+    // 🔵 RTO AGENT → own leads (IMPORTANT)
+    if (role === "rto_agent") {
+      result = await pool.query(
+        `SELECT * FROM leads 
+         WHERE created_by = $1 
+         ORDER BY loan_id DESC`,
+        [userId]
+      );
+      return res.json(result.rows);
+    }
+
+    // ❌ fallback
+    return res.status(403).json({ error: "Unauthorized role" });
+
   } catch (err) {
-    console.error("Get lead error:", err);
-    res.status(500).json({ success: false });
+    console.error("LEADS FETCH ERROR:", err);
+    res.status(500).json({ error: "Server error" });
   }
 });
+
 
 app.put("/api/leads/:loanId", async (req, res) => {
   try {
@@ -688,6 +744,19 @@ else if (role === "dealer") {
   `;
   params = [userId];
 }
+// 🟣 RTO AGENT ACCESS
+else if (role === "rto") {
+  result = await db.query(`
+    SELECT * FROM leads
+    WHERE stage = 'Disbursed'
+    ORDER BY loan_id DESC
+  `);
+}
+
+
+    else {
+      return res.status(403).json({ error: "Unauthorized role" });
+    }
 
 
     const { rows } = await pool.query(query, params);
@@ -813,7 +882,7 @@ app.get("/api/users/dealers", async (req, res) => {
     if (!userCheck.rows.length) return res.status(403).json({ error: "Unauthorized" });
 
     const role = (userCheck.rows[0].role || '').toLowerCase();
-    if (!['admin', 'manager', 'employee'].includes(role)) {
+    if (!['admin', 'manager', 'employee',"rto_agent"].includes(role)) {
       return res.status(403).json({ error: "Access denied" });
     }
 
