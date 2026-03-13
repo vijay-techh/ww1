@@ -1,36 +1,53 @@
 const express = require("express");
-
 const path = require("path");
-
 const cors = require("cors");
-
+const crypto = require("crypto");
 require("dotenv").config();
 
-
-
 const pool = require("./db");
-
-
 
 const app = express();
 
 app.use(cors());
-
 app.use(express.json());
 
-
-
 // Serve frontend static files
-
 const FRONTEND_PATH = path.join(__dirname, "../frontend");
-
 app.use(express.static(FRONTEND_PATH));
 
+// ----------------- Session Token Utilities -----------------
+function generateSessionToken() {
+  return crypto.randomBytes(32).toString("hex");
+}
 
+// Middleware to validate session token
+async function validateSession(req, res, next) {
+  const userId = parseInt(req.headers["x-user-id"] || req.headers["x-admin-id"]);
+  const sessionToken = req.headers["x-session-token"];
+  
+  if (!userId || !sessionToken) {
+    return res.status(401).json({ error: "Unauthorized - Missing credentials" });
+  }
+  
+  try {
+    const { rows } = await pool.query(
+      "SELECT session_token FROM users WHERE id = $1 AND deleted_at IS NULL",
+      [userId]
+    );
+    
+    if (!rows.length || rows[0].session_token !== sessionToken) {
+      return res.status(401).json({ error: "Session expired - Please login again" });
+    }
+    
+    req.userId = userId;
+    next();
+  } catch (err) {
+    console.error("Session validation error:", err);
+    res.status(500).json({ error: "Session validation failed" });
+  }
+}
 
 // ----------------- Utilities -----------------
-
-
 
 function generateDealerCode() {
 
@@ -700,45 +717,96 @@ app.get("/api/manager/stats", async (req, res) => {
 
 
 
-// ----------------- Auth (temporary) -----------------
+// ----------------- Auth (Single Device Login) -----------------
 
 app.post("/api/login", async (req, res) => {
-
   try {
-
     const { username, password } = req.body;
 
-
-
     const { rows } = await pool.query(
-
       `SELECT id, username, role, status FROM users WHERE username=$1 AND password=$2 AND status='active' AND deleted_at IS NULL`,
-
       [username, password]
-
     );
-
-
 
     if (!rows.length) return res.status(401).json({ error: "Invalid credentials or account disabled" });
 
+    // Generate new session token
+    const sessionToken = generateSessionToken();
+    
+    // Update user with new session token (invalidates old sessions)
+    await pool.query(
+      "UPDATE users SET session_token = $1, last_login = NOW() WHERE id = $2",
+      [sessionToken, rows[0].id]
+    );
 
-
-    await pool.query("UPDATE users SET last_login = NOW() WHERE id = $1", [rows[0].id]);
-
-
-
-    res.json({ id: rows[0].id, username: rows[0].username, role: rows[0].role });
+    res.json({ 
+      id: rows[0].id, 
+      username: rows[0].username, 
+      role: rows[0].role,
+      sessionToken: sessionToken 
+    });
 
   } catch (err) {
-
     console.error("Login error:", err);
-
     res.status(500).json({ error: "Login failed" });
-
   }
-
 });
+
+// Logout endpoint - clear session token
+app.post("/api/logout", async (req, res) => {
+  try {
+    const userId = parseInt(req.headers["x-user-id"]);
+    const sessionToken = req.headers["x-session-token"];
+    
+    if (userId && sessionToken) {
+      // Verify the session token matches before clearing
+      const { rows } = await pool.query(
+        "SELECT session_token FROM users WHERE id = $1 AND deleted_at IS NULL",
+        [userId]
+      );
+      
+      if (rows.length && rows[0].session_token === sessionToken) {
+        await pool.query(
+          "UPDATE users SET session_token = NULL WHERE id = $1",
+          [userId]
+        );
+      }
+    }
+    
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Logout error:", err);
+    res.status(500).json({ error: "Logout failed" });
+  }
+});
+
+// Verify session endpoint
+app.post("/api/verify-session", async (req, res) => {
+  try {
+    const userId = parseInt(req.headers["x-user-id"]);
+    const sessionToken = req.headers["x-session-token"];
+    
+    if (!userId || !sessionToken) {
+      return res.status(401).json({ error: "Unauthorized - Missing credentials" });
+    }
+    
+    const { rows } = await pool.query(
+      "SELECT session_token FROM users WHERE id = $1 AND deleted_at IS NULL",
+      [userId]
+    );
+    
+    if (!rows.length || rows[0].session_token !== sessionToken) {
+      return res.status(401).json({ error: "Session expired - Please login again" });
+    }
+    
+    res.json({ valid: true });
+  } catch (err) {
+    console.error("Session verification error:", err);
+    res.status(500).json({ error: "Session verification failed" });
+  }
+});
+
+
 
 
 

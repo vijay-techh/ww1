@@ -1,3 +1,8 @@
+// Check session validity on page load
+if (window.sessionManager && !window.sessionManager.isSessionValid()) {
+  window.sessionManager.logout(true, "Please login to access this page.");
+}
+
 const user = JSON.parse(localStorage.getItem("user"));
 if (!user || user.role !== "admin") {
   showToast("Admin access only");

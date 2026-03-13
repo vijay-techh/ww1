@@ -1,3 +1,8 @@
+// Check session validity on page load
+if (window.sessionManager && !window.sessionManager.isSessionValid()) {
+  window.sessionManager.logout(true, "Please login to access this page.");
+}
+
 // Profile page JavaScript - works exactly like User Management info function
 const rawUser = localStorage.getItem("user");
 const user = JSON.parse(localStorage.getItem("user"));

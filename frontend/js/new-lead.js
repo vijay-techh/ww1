@@ -1,3 +1,7 @@
+// Check session validity on page load
+if (window.sessionManager && !window.sessionManager.isSessionValid()) {
+  window.sessionManager.logout(true, "Please login to access this page.");
+}
 
 console.log("New Lead JS loaded");
 

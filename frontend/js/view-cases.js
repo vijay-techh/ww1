@@ -1,3 +1,8 @@
+// Check session validity on page load
+if (window.sessionManager && !window.sessionManager.isSessionValid()) {
+  window.sessionManager.logout(true, "Please login to access this page.");
+}
+
 const filterRole = document.getElementById("filterRole");
 if (filterRole) filterRole.addEventListener("change", applyFilters);
 const filterUser = document.getElementById("filterUser");

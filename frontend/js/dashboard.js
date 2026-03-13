@@ -1,13 +1,18 @@
+// Check session validity on page load
+if (window.sessionManager && !window.sessionManager.isSessionValid()) {
+  window.sessionManager.logout(true, "Please login to access the dashboard.");
+}
+
 const rawUser = localStorage.getItem("user");
 const user = JSON.parse(localStorage.getItem("user"));
+
+if (!user) {
+  window.location.href = "/index.html";
+}
 
 if (user.role !== "employee") {
   const dealerLeadBtn = document.getElementById("dealerLeadBtn");
   if (dealerLeadBtn) dealerLeadBtn.style.display = "none";
-}
-
-if (!user) {
-  window.location.href = "/index.html";
 }
 function openDealerLeads(){
   // open view cases page with dealer filter
@@ -60,9 +65,14 @@ if (user.role === "admin") {
   if (myKhataMenu) myKhataMenu.style.display = "none";
 }
 
-function logout() {
-  localStorage.removeItem("token");
-  window.location.href = "index.html";
+async function logout() {
+  // Use session manager if available, otherwise just clear and redirect
+  if (window.sessionManager) {
+    await window.sessionManager.serverLogout();
+  } else {
+    localStorage.removeItem("user");
+    window.location.href = "index.html";
+  }
 }
 
 // 🎯 NOTIFICATION SYSTEM
