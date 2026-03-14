@@ -25,7 +25,14 @@ async function validateSession(req, res, next) {
   const userId = parseInt(req.headers["x-user-id"] || req.headers["x-admin-id"]);
   const sessionToken = req.headers["x-session-token"];
   
+  console.log("[SESSION DEBUG] Headers received:", {
+    userId: userId,
+    sessionToken: sessionToken ? sessionToken.substring(0, 8) + "..." : null,
+    path: req.path
+  });
+  
   if (!userId || !sessionToken) {
+    console.log("[SESSION DEBUG] Missing credentials - userId:", userId, "sessionToken:", !!sessionToken);
     return res.status(401).json({ error: "Unauthorized - Missing credentials" });
   }
   
@@ -34,6 +41,9 @@ async function validateSession(req, res, next) {
       "SELECT session_token FROM users WHERE id = $1 AND deleted_at IS NULL",
       [userId]
     );
+    
+    console.log("[SESSION DEBUG] DB token:", rows[0]?.session_token ? rows[0].session_token.substring(0, 8) + "..." : null);
+    console.log("[SESSION DEBUG] Match:", rows[0]?.session_token === sessionToken);
     
     if (!rows.length || rows[0].session_token !== sessionToken) {
       return res.status(401).json({ error: "Session expired - Please login again" });
@@ -113,7 +123,7 @@ function generateLoanId() {
 
 // ----------------- ROLE BASED DASHBOARD -----------------
 
-app.get("/api/dashboard/:role/:userId", async (req, res) => {
+app.get("/api/dashboard/:role/:userId", validateSession, async (req, res) => {
 
   try {
 
@@ -303,7 +313,7 @@ app.get("/api/dashboard/:role/:userId", async (req, res) => {
 
 
 
-app.get("/api/dashboard/:role/:userId/best-employee", async (req, res) => {
+app.get("/api/dashboard/:role/:userId/best-employee", validateSession, async (req, res) => {
 
   try {
 
@@ -495,7 +505,7 @@ app.get("/api/dashboard/:role/:userId/best-employee", async (req, res) => {
 
 
 
-app.get("/api/dashboard/:role/:userId/business-type", async (req, res) => {
+app.get("/api/dashboard/:role/:userId/business-type", validateSession, async (req, res) => {
 
   try {
 
@@ -665,7 +675,7 @@ app.get("/api/dashboard/:role/:userId/business-type", async (req, res) => {
 
 
 
-app.get("/api/manager/stats", async (req, res) => {
+app.get("/api/manager/stats", validateSession, async (req, res) => {
 
   try {
 
@@ -910,7 +920,7 @@ app.get("/api/users/:id", async (req, res) => {
 
 // ----------------- Leads -----------------
 
-app.post("/api/leads", async (req, res) => {
+app.post("/api/leads", validateSession, async (req, res) => {
 
   try {
 
@@ -1228,7 +1238,7 @@ app.post("/api/leads", async (req, res) => {
 
 
 
-app.get("/api/leads/:loanId", async (req, res) => {
+app.get("/api/leads/:loanId", validateSession, async (req, res) => {
   try {
     const { loanId } = req.params;
     const result = await pool.query("SELECT * FROM leads WHERE loan_id = $1", [loanId]);
@@ -1241,7 +1251,7 @@ app.get("/api/leads/:loanId", async (req, res) => {
 
 });
 
-app.put("/api/leads/:loanId", async (req, res) => {
+app.put("/api/leads/:loanId", validateSession, async (req, res) => {
 
   try {
 
@@ -1263,7 +1273,7 @@ app.put("/api/leads/:loanId", async (req, res) => {
 
 
 
-app.get("/api/leads", async (req, res) => {
+app.get("/api/leads", validateSession, async (req, res) => {
 
   try {
 
@@ -1505,7 +1515,7 @@ else if (role === "dealer") {
 
 
 
-app.delete("/api/leads/:loanId", async (req, res) => {
+app.delete("/api/leads/:loanId", validateSession, async (req, res) => {
 
   try {
 
@@ -1569,7 +1579,7 @@ app.post("/api/validate-pincode", async (req, res) => {
 
 // ----------------- Admin users -----------------
 
-app.get("/api/admin/users", async (req, res) => {
+app.get("/api/admin/users", validateSession, async (req, res) => {
 
   try {
 
@@ -1755,7 +1765,7 @@ app.get("/api/users/dealers", async (req, res) => {
 
 //tharun
 
-app.post("/api/admin/users", async (req, res) => {
+app.post("/api/admin/users", validateSession, async (req, res) => {
 
   try {
 
@@ -4305,7 +4315,7 @@ app.get("/api/user/employee-info/:id", async (req, res) => {
 
 
 
-    if (!rows.length) return res.status(404).json({ error:"Employee not found" });
+    if (!rows.length) return res.json(null);
 
 
 
@@ -4377,7 +4387,7 @@ app.get("/api/user/dealer-info/:id", async (req, res) => {
 
 
 
-    if (!rows.length) return res.status(404).json({ error:"Dealer not found" });
+    if (!rows.length) return res.json(null);
 
 
 
@@ -4417,7 +4427,7 @@ app.get("/api/user/manager-info/:id", async (req, res) => {
 
 
 
-    if (!rows.length) return res.status(404).json({ error:"Manager not found" });
+    if (!rows.length) return res.json(null);
 
 
 

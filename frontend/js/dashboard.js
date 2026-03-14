@@ -91,7 +91,11 @@ async function loadNotifications() {
     const header = user.role === "admin" ? { "x-admin-id": user.id } : { "x-dealer-id": user.id };
     
     const res = await fetch(endpoint, {
-      headers: header
+      headers: {
+        'x-user-id': user.id,
+        'x-session-token': user.sessionToken,
+        ...(user.role === "admin" ? { "x-admin-id": user.id } : { "x-dealer-id": user.id })
+      }
     });
     
     console.log("📡 Notifications API response status:", res.status);
@@ -159,9 +163,10 @@ async function markAllNotificationsAsRead() {
     
     const res = await fetch(endpoint, {
       method: "POST",
-      headers: { 
-        ...header,
-        "Content-Type": "application/json"
+      headers: {
+        'x-user-id': user.id,
+        'x-session-token': user.sessionToken,
+        ...(user.role === "admin" ? { "x-admin-id": user.id } : { "x-dealer-id": user.id })
       }
     });
     
@@ -297,7 +302,12 @@ async function loadDashboard() {
       url = `/api/dashboard/${user.role}/${user.id}`;
     }
 
-    const res = await fetch(url);
+    const res = await fetch(url, {
+      headers: {
+        'x-user-id': user.id,
+        'x-session-token': user.sessionToken
+      }
+    });
     if (!res.ok) throw new Error("Dashboard API failed");
 
     const data = await res.json();
@@ -324,7 +334,12 @@ async function loadBusinessType() {
       url = `/api/dashboard/${user.role}/${user.id}/business-type`;
     }
 
-    const res = await fetch(url);
+    const res = await fetch(url, {
+      headers: {
+        'x-user-id': user.id,
+        'x-session-token': user.sessionToken
+      }
+    });
     const data = await res.json();
 
     const bar = document.getElementById("businessTypeBar");
@@ -372,7 +387,12 @@ async function showWelcomePopup() {
         // Fetch profile data to get user's name
         let displayName = user.username; // fallback to username
         try {
-          const response = await fetch(`/api/user/${user.role}-info/${user.id}`);
+          const response = await fetch(`/api/user/${user.role}-info/${user.id}`, {
+            headers: {
+              'x-user-id': user.id,
+              'x-session-token': user.sessionToken
+            }
+          });
           if (response.ok) {
             const profileData = await response.json();
             // Use first_name + last_name if available
@@ -434,7 +454,12 @@ async function loadBestEmployee() {
     if (!user || !user.role || !user.id) return;
 
     const url = `/api/dashboard/${encodeURIComponent(user.role)}/${encodeURIComponent(user.id)}/best-employee`;
-    const res = await fetch(url);
+    const res = await fetch(url, {
+      headers: {
+        'x-user-id': user.id,
+        'x-session-token': user.sessionToken
+      }
+    });
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}`);
     }
@@ -460,7 +485,12 @@ async function loadBestEmployee() {
       const bestEmployeeId = data.employee_id;
       
       if (bestEmployeeId) {
-        const profileRes = await fetch(`/api/user/employee-info/${bestEmployeeId}`);
+        const profileRes = await fetch(`/api/user/employee-info/${bestEmployeeId}`, {
+          headers: {
+            'x-user-id': user.id,
+            'x-session-token': user.sessionToken
+          }
+        });
         if (profileRes.ok) {
           const profileData = await profileRes.json();
           if (profileData.first_name || profileData.last_name) {

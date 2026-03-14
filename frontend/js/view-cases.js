@@ -162,7 +162,17 @@ async function fetchLeads() {
     }
 
 
-    const res = await fetch(fetchUrl);
+    console.log("[FRONTEND DEBUG] Sending headers:", {
+      userId: user.id,
+      sessionToken: user.sessionToken ? user.sessionToken.substring(0, 8) + "..." : null
+    });
+
+    const res = await fetch(fetchUrl, {
+      headers: {
+        'x-user-id': user.id,
+        'x-session-token': user.sessionToken
+      }
+    });
 
     const leads = await res.json();
     allLeads = Array.isArray(leads) ? leads : [];
@@ -302,7 +312,13 @@ function attachRowHandlers() {
       const id = btn.dataset.id;
       if (!confirm('Delete lead ' + id + '?')) return;
       try {
-        const res = await fetch(`/api/leads/${id}`, { method: 'DELETE' });
+        const res = await fetch(`/api/leads/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'x-user-id': user.id,
+            'x-session-token': user.sessionToken
+          }
+        });
         if (res.ok) {
           await fetchLeads();
         } else {
